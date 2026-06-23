@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>zhimeng-ai 工作流平台 Demo</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: #f5f7fb;
+        color: #111827;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+      }
+
+      main {
+        width: min(1280px, 100%);
+        margin: 0 auto;
+        padding: 32px 20px;
+      }
+
+      section {
+        margin-bottom: 24px;
+        border: 1px solid #dbe3f0;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 1px 4px rgba(15, 23, 42, 0.05);
+      }
+
+      .header {
+        padding: 28px;
+        display: flex;
+        gap: 20px;
+        align-items: end;
+        justify-content: space-between;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 30px;
+        line-height: 1.25;
+      }
+
+      h2 {
+        margin-bottom: 16px;
+        font-size: 18px;
+      }
+
+      .subtitle {
+        margin-top: 12px;
+        color: #4b5563;
+        font-size: 16px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 360px 1fr;
+        gap: 24px;
+      }
+
+      .grid-two {
+        display: grid;
+        grid-template-columns: 420px 1fr;
+        gap: 24px;
+      }
+
+      .panel {
+        padding: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 16px;
+        color: #374151;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      input {
+        width: 100%;
+        margin-top: 8px;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        color: #111827;
+        font-size: 14px;
+        outline: none;
+      }
+
+      input:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+      }
+
+      button {
+        min-width: 132px;
+        height: 44px;
+        border: 0;
+        border-radius: 6px;
+        background: #2563eb;
+        color: #fff;
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      button:disabled {
+        cursor: wait;
+        opacity: 0.75;
+      }
+
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .step {
+        position: relative;
+        min-height: 136px;
+        padding: 16px;
+        border: 1px solid #dbe3f0;
+        border-radius: 8px;
+        background: #f8fafc;
+      }
+
+      .step.reviewer {
+        border-color: #f59e0b;
+        background: #fffbeb;
+      }
+
+      .step:not(:last-child)::after {
+        content: "→";
+        position: absolute;
+        right: -15px;
+        top: 50%;
+        z-index: 1;
+        color: #94a3b8;
+        font-size: 20px;
+      }
+
+      .step-id {
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .step-title {
+        margin-top: 10px;
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      .step-desc {
+        margin-top: 10px;
+        color: #4b5563;
+        font-size: 14px;
+        line-height: 1.65;
+      }
+
+      .loop-edge {
+        margin-top: 20px;
+        padding: 16px;
+        border: 1px dashed #f59e0b;
+        border-radius: 8px;
+        background: #fff7ed;
+        color: #7c2d12;
+      }
+
+      .loop-edge strong {
+        display: block;
+        margin-bottom: 10px;
+        color: #9a3412;
+      }
+
+      .loop-content {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 14px;
+      }
+
+      .code {
+        min-height: 360px;
+        padding: 16px;
+        border-radius: 8px;
+        background: #0f172a;
+        color: #d1fae5;
+        font-family: Consolas, Monaco, "Courier New", monospace;
+        font-size: 14px;
+        line-height: 1.7;
+        overflow: auto;
+      }
+
+      .muted {
+        color: #94a3b8;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        background: #eef2ff;
+        color: #3730a3;
+        padding: 5px 12px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .section-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .script {
+        min-height: 360px;
+        padding: 20px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        background: #f8fafc;
+        color: #1f2937;
+        white-space: pre-line;
+        font-size: 14px;
+        line-height: 1.8;
+      }
+
+      .review-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .review-card {
+        padding: 16px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+      }
+
+      .review-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .approved {
+        background: #dcfce7;
+        color: #166534;
+      }
+
+      .rejected {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      ul {
+        margin: 8px 0 0;
+        padding-left: 18px;
+        color: #374151;
+        line-height: 1.75;
+      }
+
+      pre {
+        max-height: 420px;
+        margin: 0;
+        padding: 20px;
+        border-radius: 8px;
+        background: #111827;
+        color: #e5e7eb;
+        font-family: Consolas, Monaco, "Courier New", monospace;
+        font-size: 14px;
+        line-height: 1.65;
+        overflow: auto;
+      }
+
+      .footer-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
+      }
+
+      .text {
+        color: #4b5563;
+        font-size: 14px;
+        line-height: 1.85;
+      }
+
+      @media (max-width: 980px) {
+        .header,
+        .loop-content {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .grid,
+        .grid-two,
+        .review-grid,
+        .footer-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .steps {
+          grid-template-columns: 1fr;
+        }
+
+        .step:not(:last-child)::after {
+          content: "↓";
+          right: 50%;
+          top: auto;
+          bottom: -24px;
+          transform: translateX(50%);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="header">
+        <div>
+          <h1>zhimeng-ai 工作流平台 Demo</h1>
+          <p class="subtitle">
+            基于 DSL + Workflow Engine + NodeExecutor 的校园播客 Multi-Agent 编排演示
+          </p>
+        </div>
+        <button id="runButton">运行 Demo</button>
+      </section>
+
+      <div class="grid">
+        <section class="panel">
+          <h2>输入区</h2>
+          <label>
+            主题 topic
+            <input id="topic" value="AI 社团招新" />
+          </label>
+          <label>
+            受众 audience
+            <input id="audience" value="大一新生" />
+          </label>
+          <label>
+            风格 style
+            <input id="style" value="轻松热血" />
+          </label>
+          <label>
+            时长 duration
+            <input id="duration" value="3 分钟" />
+          </label>
+        </section>
+
+        <section class="panel">
+          <h2>工作流展示区</h2>
+          <div class="steps">
+            <div class="step">
+              <div class="step-id">input_1</div>
+              <div class="step-title">Input</div>
+              <p class="step-desc">收集 topic / audience / style / duration</p>
+            </div>
+            <div class="step">
+              <div class="step-id">supervisor_1</div>
+              <div class="step-title">Supervisor Agent</div>
+              <p class="step-desc">拆解任务并生成写作计划</p>
+            </div>
+            <div class="step">
+              <div class="step-id">writer_1</div>
+              <div class="step-title">Writer Agent</div>
+              <p class="step-desc">生成校园播客文稿</p>
+            </div>
+            <div class="step reviewer">
+              <div class="step-id">reviewer_1</div>
+              <div class="step-title">Reviewer Agent</div>
+              <p class="step-desc">审核质量并给出重写建议</p>
+            </div>
+            <div class="step">
+              <div class="step-id">output_1</div>
+              <div class="step-title">Output Node</div>
+              <p class="step-desc">输出最终文稿与审核结果</p>
+            </div>
+          </div>
+          <div class="loop-edge">
+            <strong>条件回流边</strong>
+            <div class="loop-content">
+              <span>Reviewer Agent 审核不通过</span>
+              <code>approved=false && rewriteCount &lt; maxRewrite</code>
+              <span>返回 Writer Agent 重写</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="grid-two">
+        <section class="panel">
+          <div class="section-title">
+            <h2>执行日志区</h2>
+            <span class="badge">前端 mock 展示</span>
+          </div>
+          <div id="logs" class="code">
+            <span class="muted">点击“运行 Demo”后展示 Workflow Engine 执行日志。</span>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Writer Agent 输出区</h2>
+          <div id="script" class="script">
+            点击“运行 Demo”后展示 Writer Agent 生成的校园播客文稿。
+          </div>
+        </section>
+      </div>
+
+      <section class="panel">
+        <h2>Reviewer Agent 审核区</h2>
+        <div class="review-grid">
+          <div class="review-card">
+            <div class="review-head">
+              <h3>第一轮审核</h3>
+              <span class="badge rejected">approved=false</span>
+            </div>
+            <p>score=6</p>
+            <h3>problems</h3>
+            <ul>
+              <li>开头吸引力不足</li>
+              <li>语言偏书面化，不适合口播</li>
+              <li>结尾缺少行动号召</li>
+            </ul>
+            <h3>rewriteSuggestions</h3>
+            <ul>
+              <li>开头增加面向大一新生的问题</li>
+              <li>把长句改成更口语化的短句</li>
+              <li>结尾加入加入社团的号召</li>
+            </ul>
+          </div>
+          <div class="review-card">
+            <div class="review-head">
+              <h3>第二轮审核</h3>
+              <span class="badge approved">approved=true</span>
+            </div>
+            <p>score=8.5</p>
+            <h3>problems</h3>
+            <p class="text">[]</p>
+            <h3>rewriteSuggestions</h3>
+            <p class="text">[]</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>DSL 展示区</h2>
+        <pre id="dsl"></pre>
+      </section>
+
+      <div class="footer-grid">
+        <section class="panel">
+          <h2>Demo 录屏</h2>
+          <p class="text">
+            后续可在此嵌入本地运行 Demo 录屏链接，用于展示后端 Workflow Engine
+            根据预置 DSL 执行 Writer / Reviewer / Output 的过程。
+          </p>
+        </section>
+        <section class="panel">
+          <h2>技术说明</h2>
+          <p class="text">
+            本页面为面试展示 Demo，当前使用前端 mock 数据展示zhimeng-ai
+            工作流平台的核心链路。真实工程中，前端画布会生成 DSL JSON，Console Hub
+            负责保存 DSL，Workflow Engine 负责解析 nodes 和 edges，并根据 nodeType
+            调度对应 NodeExecutor。Writer Agent 生成文稿后，结果写入变量池；Reviewer
+            Agent 从变量池读取文稿并输出 approved、problems、rewriteSuggestions；Workflow
+            Engine 根据 approved 字段选择条件边，实现审核不通过返回 Writer
+            重写、审核通过进入 Output 的图编排流程。
+          </p>
+        </section>
+      </div>
+    </main>
+
+    <script>
+      const logs = [
+        "workflow_start",
+        "node_start: input_1",
+        "node_complete: input_1",
+        "node_start: supervisor_1",
+        "node_complete: supervisor_1",
+        "node_start: writer_1",
+        "node_complete: writer_1",
+        "node_start: reviewer_1",
+        "reviewer_result: approved=false",
+        "condition_edge: reviewer_1 → writer_1",
+        "rewrite_start: writer_1",
+        "node_complete: writer_1",
+        "node_start: reviewer_1",
+        "reviewer_result: approved=true",
+        "condition_edge: reviewer_1 → output_1",
+        "node_start: output_1",
+        "workflow_complete",
+      ];
+
+      const dsl = {
+        nodes: [
+          { id: "input_1", type: "input" },
+          { id: "supervisor_1", type: "llm_agent", role: "supervisor" },
+          { id: "writer_1", type: "llm_agent", role: "writer" },
+          { id: "reviewer_1", type: "llm_agent", role: "reviewer" },
+          { id: "output_1", type: "output" },
+        ],
+        edges: [
+          { from: "input_1", to: "supervisor_1" },
+          { from: "supervisor_1", to: "writer_1" },
+          { from: "writer_1", to: "reviewer_1" },
+          {
+            from: "reviewer_1",
+            to: "writer_1",
+            condition: "approved == false && rewriteCount < maxRewrite",
+          },
+          {
+            from: "reviewer_1",
+            to: "output_1",
+            condition: "approved == true",
+          },
+        ],
+      };
+
+      document.getElementById("dsl").textContent = JSON.stringify(dsl, null, 2);
+
+      let timers = [];
+
+      function scriptText() {
+        const topic = document.getElementById("topic").value;
+        const audience = document.getElementById("audience").value;
+        const style = document.getElementById("style").value;
+        const duration = document.getElementById("duration").value;
+
+        return `嘿，刚走进大学校园的你，有没有想过把脑洞变成真正能跑起来的 AI 作品？
+
+欢迎来到zhimeng-ai校园播客。今天这期，我们聊的是「${topic}」。
+
+如果你是${audience}，也许你刚听说大模型、Agent、工作流这些词，还没来得及真正动手。没关系，AI 社团就是为这样的你准备的。这里没有高高在上的门槛，只有一群愿意一起试错、一起熬夜、一起把想法做成 Demo 的伙伴。
+
+在社团里，你可以参与校园助手、学习规划、活动海报生成、播客脚本创作等项目。Supervisor Agent 会帮我们拆任务，Writer Agent 负责产出内容，Reviewer Agent 会像队友一样挑问题、提建议，直到作品真的能拿出去展示。
+
+这不是一场普通招新，而是一张通往 AI 实战的入场券。用${style}的方式说，大学四年很长，但第一次把 AI 项目跑通的兴奋，可能就从这 ${duration} 开始。
+
+如果你也想把灵感变成作品，把好奇变成能力，欢迎加入 AI 社团。下一次 Demo 展示台上，主角可能就是你。`;
+      }
+
+      function runDemo() {
+        timers.forEach(clearTimeout);
+        timers = [];
+
+        const button = document.getElementById("runButton");
+        const logsBox = document.getElementById("logs");
+        const scriptBox = document.getElementById("script");
+
+        button.disabled = true;
+        button.textContent = "运行中...";
+        logsBox.innerHTML = "";
+        scriptBox.textContent = scriptText();
+
+        logs.forEach((line, index) => {
+          const timer = setTimeout(() => {
+            const item = document.createElement("div");
+            item.innerHTML = `<span class="muted">${String(index + 1).padStart(2, "0")}</span>&nbsp;&nbsp;${line}`;
+            logsBox.appendChild(item);
+            logsBox.scrollTop = logsBox.scrollHeight;
+
+            if (index === logs.length - 1) {
+              button.disabled = false;
+              button.textContent = "运行 Demo";
+            }
+          }, index * 220);
+          timers.push(timer);
+        });
+      }
+
+      document.getElementById("runButton").addEventListener("click", runDemo);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,893 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>zhimeng-ai 智能体工作流编排平台 Demo</title>
+    <meta
+      name="description"
+      content="zhimeng-ai 智能体工作流编排平台静态展示页——可视化 DSL 编排、Multi-Agent 协作与条件回流演示。"
+    />
+    <style>
+      :root {
+        --bg: #f5f7fb;
+        --panel: #ffffff;
+        --line: #dfe7f3;
+        --text: #172033;
+        --muted: #607089;
+        --blue: #275eff;
+        --green: #139a43;
+        --orange: #d97706;
+        --red: #c2410c;
+        --purple: #6d5dfc;
+        --shadow: 0 10px 30px rgba(20, 32, 58, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, #f7faff 0%, var(--bg) 100%);
+        color: var(--text);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", "Microsoft YaHei", sans-serif;
+      }
+
+      button {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--text);
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        padding: 9px 12px;
+      }
+
+      button:hover {
+        border-color: var(--blue);
+        color: var(--blue);
+      }
+
+      .primary {
+        border-color: var(--blue);
+        background: var(--blue);
+        color: #fff;
+      }
+
+      .primary:hover {
+        color: #fff;
+        filter: brightness(0.96);
+      }
+
+      .page {
+        max-width: 1680px;
+        margin: 0 auto;
+        padding: 28px;
+      }
+
+      .hero,
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .hero {
+        padding: 28px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        width: fit-content;
+        border-radius: 999px;
+        background: #eaf0ff;
+        color: var(--blue);
+        font-size: 13px;
+        font-weight: 700;
+        padding: 6px 10px;
+      }
+
+      h1 {
+        margin: 14px 0 8px;
+        font-size: 30px;
+        letter-spacing: 0;
+      }
+
+      h2 {
+        margin: 0 0 16px;
+        font-size: 18px;
+        letter-spacing: 0;
+      }
+
+      h3 {
+        margin: 0 0 8px;
+        font-size: 15px;
+      }
+
+      p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      .main-grid {
+        display: grid;
+        grid-template-columns: 300px minmax(560px, 1fr) 430px;
+        gap: 16px;
+        margin-top: 16px;
+      }
+
+      .bottom-grid {
+        display: grid;
+        grid-template-columns: 1.1fr 1fr 0.8fr;
+        gap: 16px;
+        margin-top: 16px;
+      }
+
+      .panel {
+        padding: 18px;
+      }
+
+      .palette {
+        display: grid;
+        gap: 10px;
+      }
+
+      .template-card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 12px;
+        background: #fbfdff;
+      }
+
+      .card-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        border-radius: 999px;
+        background: #eef2f7;
+        color: #516078;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 4px 8px;
+        white-space: nowrap;
+      }
+
+      .tag.agent {
+        background: #eaf0ff;
+        color: var(--blue);
+      }
+
+      .tag.tool {
+        background: #e9f8ef;
+        color: var(--green);
+      }
+
+      .tag.condition {
+        background: #fff4df;
+        color: var(--orange);
+      }
+
+      .tag.system {
+        background: #eef2f7;
+        color: #667085;
+      }
+
+      .template-card p {
+        margin: 8px 0 10px;
+        font-size: 13px;
+      }
+
+      .canvas {
+        position: relative;
+        min-height: 720px;
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background-image:
+          linear-gradient(#e8eef7 1px, transparent 1px),
+          linear-gradient(90deg, #e8eef7 1px, transparent 1px);
+        background-size: 24px 24px;
+      }
+
+      .graph {
+        position: relative;
+        width: 900px;
+        height: 780px;
+      }
+
+      .edges {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      .node {
+        position: absolute;
+        width: 225px;
+        min-height: 112px;
+        border: 1px solid rgba(68, 83, 130, 0.2);
+        border-top-width: 4px;
+        border-radius: 8px;
+        background: linear-gradient(180deg, #fff 0%, #f9fbff 100%);
+        box-shadow: 0 8px 22px rgba(23, 32, 61, 0.1);
+        padding: 14px;
+      }
+
+      .node.agent {
+        border-top-color: var(--blue);
+      }
+
+      .node.tool {
+        border-top-color: var(--green);
+      }
+
+      .node.system {
+        border-top-color: #7a869a;
+      }
+
+      .node.condition {
+        border-top-color: var(--orange);
+      }
+
+      .node.selected {
+        border-color: var(--blue);
+        border-top-color: var(--blue);
+        box-shadow: 0 12px 30px rgba(39, 94, 255, 0.2);
+      }
+
+      .node p {
+        margin-top: 5px;
+        font-size: 12px;
+      }
+
+      .node .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 10px;
+      }
+
+      .status {
+        display: inline-flex;
+        border-radius: 999px;
+        background: #ecfeff;
+        color: #0e7490;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 7px;
+      }
+
+      .status.mock {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      .config-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .kv {
+        border-radius: 8px;
+        background: #f7f9fd;
+        padding: 10px;
+      }
+
+      .kv b {
+        display: block;
+        margin-bottom: 5px;
+        color: #7b8798;
+        font-size: 12px;
+        text-transform: uppercase;
+      }
+
+      pre {
+        margin: 0;
+        max-height: 360px;
+        overflow: auto;
+        border-radius: 8px;
+        background: #0f172a;
+        color: #dbeafe;
+        font-size: 12px;
+        line-height: 1.7;
+        padding: 14px;
+      }
+
+      .logs {
+        min-height: 210px;
+        max-height: 280px;
+      }
+
+      .output-block {
+        display: grid;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .output-item {
+        border-radius: 8px;
+        background: #f7f9fd;
+        padding: 10px;
+      }
+
+      .links {
+        display: grid;
+        gap: 10px;
+      }
+
+      .disabled-link {
+        opacity: 0.62;
+      }
+
+      .video {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 178px;
+        border: 1px dashed #c6d1e3;
+        border-radius: 8px;
+        background: #f7fafd;
+        color: var(--muted);
+        line-height: 1.7;
+        padding: 20px;
+        text-align: center;
+      }
+
+      .note {
+        border-left: 4px solid var(--blue);
+        border-radius: 8px;
+        background: #f2f6ff;
+        padding: 12px;
+      }
+
+      @media (max-width: 1280px) {
+        .main-grid,
+        .bottom-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .canvas {
+          min-height: 620px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <span class="eyebrow">zhimeng-ai Workflow Showcase</span>
+        <h1>zhimeng-ai 智能体工作流编排平台 Demo</h1>
+        <p>
+          可视化 DSL 编排、Multi-Agent 节点、Tool 节点与条件边回流展示。
+        </p>
+        <p>
+          本页面为纯前端静态展示 Demo，展示 zhimeng-ai 智能体工作流编排平台的核心设计思路。真实平台中，前端画布生成 nodes、edges 和 config，Console
+          Hub 保存工作流 DSL，Workflow Engine 读取 DSL 后根据 nodeType 调度对应 NodeExecutor
+          执行，支持 Agent 节点的条件回流形成完整 Graph。本 Demo 不依赖后端服务，适合长期部署为简历展示链接。
+        </p>
+        <div class="toolbar">
+          <button class="primary" id="loadPreset">加载预设工作流</button>
+          <button id="clearCanvas">清空画布</button>
+          <button id="copyDslTop">复制 DSL</button>
+          <button id="runWorkflow">模拟执行</button>
+        </div>
+      </section>
+
+      <section class="main-grid">
+        <aside class="panel">
+          <h2>Node Palette</h2>
+          <div class="palette" id="palette"></div>
+        </aside>
+
+        <section class="panel">
+          <h2>Workflow Canvas</h2>
+          <div class="canvas">
+            <div class="graph" id="graph">
+              <svg class="edges" viewBox="0 0 900 780">
+                <defs>
+                  <marker
+                    id="arrowBlue"
+                    markerWidth="10"
+                    markerHeight="10"
+                    refX="8"
+                    refY="3"
+                    orient="auto"
+                  >
+                    <path d="M0,0 L0,6 L9,3 z" fill="#275eff"></path>
+                  </marker>
+                  <marker
+                    id="arrowGreen"
+                    markerWidth="10"
+                    markerHeight="10"
+                    refX="8"
+                    refY="3"
+                    orient="auto"
+                  >
+                    <path d="M0,0 L0,6 L9,3 z" fill="#139a43"></path>
+                  </marker>
+                  <marker
+                    id="arrowOrange"
+                    markerWidth="10"
+                    markerHeight="10"
+                    refX="8"
+                    refY="3"
+                    orient="auto"
+                  >
+                    <path d="M0,0 L0,6 L9,3 z" fill="#d97706"></path>
+                  </marker>
+                </defs>
+                <path d="M 450 152 V 206" stroke="#275eff" stroke-width="2.4" fill="none" marker-end="url(#arrowBlue)" />
+                <path d="M 450 318 C 450 350 320 340 272 392" stroke="#275eff" stroke-width="2.4" fill="none" marker-end="url(#arrowBlue)" />
+                <path d="M 305 450 H 462" stroke="#275eff" stroke-width="2.4" fill="none" marker-end="url(#arrowBlue)" />
+                <path d="M 464 485 C 360 560 225 555 225 492" stroke="#d97706" stroke-width="2.8" fill="none" marker-end="url(#arrowOrange)" />
+                <rect x="265" y="548" width="190" height="28" rx="8" fill="#fff7ed" />
+                <text x="278" y="567" fill="#b45309" font-size="13" font-weight="700">rejected / approved=false</text>
+                <path d="M 575 492 V 596" stroke="#139a43" stroke-width="2.8" fill="none" marker-end="url(#arrowGreen)" />
+                <rect x="594" y="530" width="178" height="28" rx="8" fill="#ecfdf5" />
+                <text x="606" y="549" fill="#047857" font-size="13" font-weight="700">approved / approved=true</text>
+                <path d="M 575 704 V 738" stroke="#275eff" stroke-width="2.4" fill="none" marker-end="url(#arrowBlue)" />
+              </svg>
+            </div>
+          </div>
+          <p class="note" style="margin-top: 12px">
+            默认预设展示 Reviewer Agent 条件回流到 Writer Agent，强调这是一张 graph，而不是普通线性 chain。
+          </p>
+        </section>
+
+        <aside class="panel">
+          <h2>节点配置面板</h2>
+          <div id="configPanel" class="config-list"></div>
+          <div style="height: 16px"></div>
+          <h2>DSL JSON 预览</h2>
+          <button id="copyDslSide" style="margin-bottom: 10px">复制 DSL</button>
+          <pre id="dslPreview"></pre>
+        </aside>
+      </section>
+
+      <section class="bottom-grid">
+        <section class="panel">
+          <h2>执行预览</h2>
+          <button class="primary" id="runWorkflowBottom">模拟执行工作流</button>
+          <pre class="logs" id="logs">点击“模拟执行工作流”后，日志会按顺序逐步出现。</pre>
+          <div class="output-block" id="mockOutput"></div>
+        </section>
+
+        <section class="panel">
+          <h2>技术说明</h2>
+          <p>
+            本 Demo 基于 zhimeng-ai 源码结构进行静态展示。zhimeng-ai 本身已经包含 React +
+            TypeScript + Vite + Ant Design + ReactFlow 的前端工作流编排层，包含 Console Hub
+            后端服务，以及 Java / Python 双工作流引擎。真实工程中，前端工作流页面会生成
+            nodes、edges 和 config，Console Hub 保存工作流元数据，Workflow Engine 读取 DSL
+            后根据 nodeType 调度对应执行器。当前页面不调用真实后端，只用于展示我基于源码理解改造的 zhimeng-ai 工作流编排平台的产品形态和技术链路。
+          </p>
+          <p style="margin-top: 12px">
+            画布上的节点不是 Console Hub 或 Workflow Engine 本身，而是平台预注册的业务节点模板。Console
+            Hub 和 Workflow Engine 是后端平台模块；Agent、Tool、Input、Output 才是用户在画布上编排的业务节点。
+          </p>
+          <div style="height: 16px"></div>
+          <h2>跳转区域</h2>
+          <div class="links">
+            <div class="template-card disabled-link">
+              <h3>查看 Agent 运行结果 Demo</h3>
+              <p>../platform/</p>
+              <p>展示编排后的 Writer / Reviewer Agent 运行结果。当前仓库未配置该路由，按钮占位。</p>
+            </div>
+            <div class="template-card disabled-link">
+              <h3>查看 Dream RAG Demo</h3>
+              <p>../rag/</p>
+              <p>展示 Agentic RAG 的 query 改写、证据召回和带引用回答。当前仓库未配置该路由，按钮占位。</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Demo 录屏</h2>
+          <video controls style="width:100%;border-radius:8px;background:#000" poster="">
+            <source src="demo-recording.mp4" type="video/mp4" />
+          </video>
+          <p class="note" style="margin-top:8px">
+            录屏展示从画布编排、DSL 生成、模拟执行到 Writer / Reviewer 条件回流的完整过程。
+          </p>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      const templates = [
+        {
+          id: "input_1",
+          key: "input",
+          name: "输入节点",
+          type: "system",
+          nodeType: "input",
+          role: "input",
+          desc: "接收用户输入，如主题、受众、风格、任务目标。",
+          status: "configured",
+          x: 338,
+          y: 40,
+          config: {
+            topic: "AI 社团招新",
+            audience: "大一新生",
+            style: "轻松热血",
+            duration: "3 分钟"
+          }
+        },
+        {
+          id: "supervisor_1",
+          key: "supervisor",
+          name: "Supervisor Agent",
+          type: "agent",
+          nodeType: "llm_agent",
+          role: "supervisor",
+          desc: "理解用户需求，规划后续执行路径。",
+          status: "configured",
+          x: 338,
+          y: 206,
+          config: {
+            type: "llm_agent",
+            role: "supervisor",
+            model: "deepseek-chat",
+            temperature: 0.3,
+            promptTemplate:
+              "你是 zhimeng-ai 工作流主理人，请根据用户输入规划校园播客生成流程。"
+          }
+        },
+        {
+          id: "writer_1",
+          key: "writer",
+          name: "Writer Agent",
+          type: "agent",
+          nodeType: "llm_agent",
+          role: "writer",
+          desc: "根据输入生成校园博客 / 播客文稿。",
+          status: "configured",
+          x: 80,
+          y: 392,
+          config: {
+            type: "llm_agent",
+            role: "writer",
+            model: "deepseek-chat",
+            temperature: 0.7,
+            promptTemplate:
+              "请根据主题 {{topic}}、受众 {{audience}}、风格 {{style}} 和时长 {{duration}} 生成适合口播的校园播客文稿。",
+            outputSchema: "title, script, estimatedDuration"
+          }
+        },
+        {
+          id: "reviewer_1",
+          key: "reviewer",
+          name: "Reviewer Agent",
+          type: "agent",
+          nodeType: "llm_agent",
+          role: "reviewer",
+          desc: "审核文稿质量，不通过则返回 Writer 重写。",
+          status: "configured",
+          x: 464,
+          y: 392,
+          config: {
+            type: "llm_agent",
+            role: "reviewer",
+            model: "deepseek-chat",
+            temperature: 0.2,
+            maxRewrite: 2,
+            reviewCriteria:
+              "主题一致性、口播适配性、风格一致性、长度控制、行动号召",
+            outputSchema:
+              "approved, score, problems, rewriteSuggestions"
+          }
+        },
+        {
+          id: "tts_1",
+          key: "tts",
+          name: "TTS Tool",
+          type: "tool",
+          nodeType: "tool",
+          role: "tts",
+          desc: "将最终文稿转成音频，当前 Demo 使用 mock。",
+          status: "mock",
+          x: 464,
+          y: 596,
+          config: {
+            type: "tool",
+            toolType: "tts",
+            voice: "young_female",
+            speed: 1.0,
+            mock: true
+          }
+        },
+        {
+          id: "output_1",
+          key: "output",
+          name: "Output Node",
+          type: "system",
+          nodeType: "output",
+          role: "output",
+          desc: "汇总最终文稿、音频链接和执行状态。",
+          status: "configured",
+          x: 464,
+          y: 738,
+          config: {
+            type: "output",
+            outputFields: "script, reviewResult, audioUrl, status"
+          }
+        }
+      ];
+
+      const palette = [
+        ["输入节点", "system", "接收用户输入，如主题、受众、风格、任务目标。"],
+        ["主理人 Agent", "agent", "理解用户需求，规划后续执行路径。"],
+        ["写作 Agent", "agent", "根据输入生成校园博客 / 播客文稿。"],
+        ["审核 Agent", "agent", "审核文稿质量，不通过则返回 Writer 重写。"],
+        ["知识检索 Tool", "tool", "可扩展接入 Dream RAG 检索能力。"],
+        ["语音合成 Tool", "tool", "将最终文稿转成音频，当前 Demo 使用 mock。"],
+        ["条件判断节点", "condition", "根据 approved 字段选择下一条边。"],
+        ["输出节点", "system", "汇总最终文稿、音频链接和执行状态。"]
+      ];
+
+      const dsl = {
+        workflowId: "zhimeng-ai-campus-podcast-demo",
+        name: "zhimeng-ai 校园播客 Multi-Agent 工作流",
+        source: "zhimeng-ai based static demo",
+        nodes: [
+          {
+            id: "input_1",
+            type: "input",
+            name: "输入节点",
+            config: {
+              topic: "AI 社团招新",
+              audience: "大一新生",
+              style: "轻松热血",
+              duration: "3 分钟"
+            }
+          },
+          {
+            id: "supervisor_1",
+            type: "llm_agent",
+            name: "Supervisor Agent",
+            role: "supervisor",
+            config: { model: "deepseek-chat", temperature: 0.3 }
+          },
+          {
+            id: "writer_1",
+            type: "llm_agent",
+            name: "Writer Agent",
+            role: "writer",
+            config: { model: "deepseek-chat", temperature: 0.7 }
+          },
+          {
+            id: "reviewer_1",
+            type: "llm_agent",
+            name: "Reviewer Agent",
+            role: "reviewer",
+            config: {
+              model: "deepseek-chat",
+              temperature: 0.2,
+              maxRewrite: 2
+            }
+          },
+          {
+            id: "tts_1",
+            type: "tool",
+            name: "TTS Tool",
+            config: {
+              toolType: "tts",
+              voice: "young_female",
+              speed: 1.0,
+              mock: true
+            }
+          },
+          { id: "output_1", type: "output", name: "Output Node" }
+        ],
+        edges: [
+          { from: "input_1", to: "supervisor_1" },
+          { from: "supervisor_1", to: "writer_1" },
+          { from: "writer_1", to: "reviewer_1" },
+          {
+            from: "reviewer_1",
+            to: "writer_1",
+            condition: "approved == false && rewriteCount < maxRewrite"
+          },
+          {
+            from: "reviewer_1",
+            to: "tts_1",
+            condition: "approved == true"
+          },
+          { from: "tts_1", to: "output_1" }
+        ]
+      };
+
+      const logs = [
+        "workflow_start",
+        "parse_dsl: success",
+        "build_graph: nodes=6, edges=6",
+        "node_start: input_1",
+        "node_complete: input_1",
+        "node_start: supervisor_1",
+        "node_complete: supervisor_1",
+        "node_start: writer_1",
+        "node_complete: writer_1",
+        "node_start: reviewer_1",
+        "reviewer_result: approved=false",
+        "condition_edge: reviewer_1 -> writer_1",
+        "rewrite_count: 1",
+        "node_start: writer_1",
+        "node_complete: writer_1",
+        "node_start: reviewer_1",
+        "reviewer_result: approved=true",
+        "condition_edge: reviewer_1 -> tts_1",
+        "node_start: tts_1",
+        "node_complete: tts_1",
+        "node_start: output_1",
+        "workflow_complete"
+      ];
+
+      const state = {
+        selected: templates[0],
+        timers: []
+      };
+
+      function renderPalette() {
+        document.getElementById("palette").innerHTML = palette
+          .map(
+            ([name, type, desc]) => `
+            <div class="template-card">
+              <div class="card-head">
+                <h3>${name}</h3>
+                <span class="tag ${type}">${type}</span>
+              </div>
+              <p>${desc}</p>
+              <button onclick="mockAdd('${name}')">添加到画布</button>
+            </div>
+          `
+          )
+          .join("");
+      }
+
+      function renderGraph() {
+        document.querySelectorAll(".node").forEach((node) => node.remove());
+        templates.forEach((node) => {
+          const el = document.createElement("button");
+          el.className = `node ${node.type}${state.selected.id === node.id ? " selected" : ""}`;
+          el.style.left = `${node.x}px`;
+          el.style.top = `${node.y}px`;
+          el.innerHTML = `
+            <h3>${node.name}</h3>
+            <p>${node.desc}</p>
+            <div class="meta">
+              <span class="tag ${node.type}">${node.type}</span>
+              <span class="tag">${node.nodeType}</span>
+              <span class="tag">${node.role}</span>
+              <span class="status ${node.status}">${node.status}</span>
+            </div>
+          `;
+          el.onclick = () => {
+            state.selected = node;
+            renderGraph();
+            renderConfig();
+          };
+          document.getElementById("graph").appendChild(el);
+        });
+      }
+
+      function renderConfig() {
+        const node = state.selected;
+        const configHtml = Object.entries(node.config)
+          .map(
+            ([key, value]) => `
+              <div class="kv">
+                <b>${key}</b>
+                <span>${typeof value === "object" ? JSON.stringify(value, null, 2) : value}</span>
+              </div>
+            `
+          )
+          .join("");
+        document.getElementById("configPanel").innerHTML = `
+          <div class="template-card">
+            <div class="card-head">
+              <h3>${node.name}</h3>
+              <span class="tag ${node.type}">${node.type}</span>
+            </div>
+            <p>${node.id} / ${node.nodeType} / ${node.role}</p>
+          </div>
+          ${configHtml}
+        `;
+      }
+
+      function renderDsl() {
+        document.getElementById("dslPreview").textContent = JSON.stringify(
+          dsl,
+          null,
+          2
+        );
+      }
+
+      function copyDsl() {
+        navigator.clipboard.writeText(JSON.stringify(dsl, null, 2));
+        alert("DSL 已复制到剪贴板");
+      }
+
+      function mockAdd(name) {
+        alert(`${name} 已添加到画布。这是纯前端状态模拟，不调用后端。`);
+      }
+
+      function clearCanvas() {
+        state.timers.forEach(clearTimeout);
+        state.timers = [];
+        document.getElementById("logs").textContent = "画布已清空。点击加载预设工作流可恢复。";
+        document.getElementById("mockOutput").innerHTML = "";
+      }
+
+      function loadPreset() {
+        state.timers.forEach(clearTimeout);
+        state.timers = [];
+        state.selected = templates[0];
+        renderGraph();
+        renderConfig();
+        document.getElementById("logs").textContent =
+          "预设工作流已加载。点击模拟执行查看 Writer / Reviewer 条件回流。";
+      }
+
+      function runWorkflow() {
+        state.timers.forEach(clearTimeout);
+        state.timers = [];
+        const logBox = document.getElementById("logs");
+        logBox.textContent = "";
+        document.getElementById("mockOutput").innerHTML = "";
+
+        logs.forEach((line, index) => {
+          const timer = setTimeout(() => {
+            logBox.textContent += `${line}\n`;
+            logBox.scrollTop = logBox.scrollHeight;
+            if (line === "workflow_complete") {
+              renderOutput();
+            }
+          }, index * 240);
+          state.timers.push(timer);
+        });
+      }
+
+      function renderOutput() {
+        document.getElementById("mockOutput").innerHTML = `
+          <div class="output-item"><b>Writer 第一轮输出：</b><p>一段偏书面化的校园播客初稿。</p></div>
+          <div class="output-item"><b>Reviewer 第一轮审核：</b><p>approved=false<br/>score=6<br/>problems: 开头吸引力不足；语言偏书面化，不适合口播；结尾缺少行动号召</p></div>
+          <div class="output-item"><b>Writer 第二轮输出：</b><p>一段更口语化、更适合大一新生的校园播客文稿。</p></div>
+          <div class="output-item"><b>Reviewer 第二轮审核：</b><p>approved=true<br/>score=8.5<br/>problems=[]<br/>rewriteSuggestions=[]</p></div>
+          <div class="output-item"><b>最终输出：</b><p>status=completed<br/>audioUrl=mock://zhimeng-ai-demo-audio.mp3</p></div>
+        `;
+      }
+
+      document.getElementById("copyDslTop").onclick = copyDsl;
+      document.getElementById("copyDslSide").onclick = copyDsl;
+      document.getElementById("runWorkflow").onclick = runWorkflow;
+      document.getElementById("runWorkflowBottom").onclick = runWorkflow;
+      document.getElementById("clearCanvas").onclick = clearCanvas;
+      document.getElementById("loadPreset").onclick = loadPreset;
+
+      renderPalette();
+      renderGraph();
+      renderConfig();
+      renderDsl();
+    </script>
+  </body>
+</html>
