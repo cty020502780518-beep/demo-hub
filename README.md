@@ -1,15 +1,12 @@
 # demo-hub
 
-A collection of three full-stack demo projects showcasing AI/LLM application development.
+Unified GitHub Pages demo showcasing zhimeng-ai projects.
 
----
+**Live:** https://cty020502780518-beep.github.io/demo-hub/
 
-| Project | Stack | Description |
-|---------|-------|-------------|
-| [cty-cli](./cty-cli/) | Python | AI-powered CLI coding assistant with multi-provider LLM support |
-| [dream-rag](./dream-rag/) | Java / Spring Boot + Vue 3 | Enterprise-grade async RAG knowledge base with hybrid search |
-| [zhimeng-ai-workflow](./zhimeng-ai-workflow/) | Java / Spring Boot + React | Multi-agent visual workflow orchestration platform |
+## Contents
 
----
-
-Each subdirectory contains its own README with architecture details, quick-start instructions, and tech documentation.
+| Tab | Description |
+|-----|-------------|
+| Dream RAG | Agentic RAG knowledge base demo — query planner, hybrid retrieval, evidence evaluation |
+| zhimeng-ai Workflow | Multi-agent workflow orchestration — Canvas view + Execution view with conditional edges |
